@@ -86,7 +86,6 @@ export default function SnapPhotoApp() {
           {/* Feedback button - adjust size based on screen */}
           <Button
             variant="outline"
-            size={useCompactLayout ? "xs" : "sm"}
             className={`absolute right-0 top-1/2 -translate-y-1/2 bg-white border-blue-300 
               text-blue-700 hover:bg-blue-50 text-xs sm:text-sm
               ${useCompactLayout ? "px-2 py-1" : ""}`}
