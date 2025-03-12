@@ -17,8 +17,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json(feedback)
   } catch (error) {
+    console.error('Error submitting feedback:', error)
     return NextResponse.json(
-      { error: 'Failed to submit feedback' },
+      { error: `Failed to submit feedback: ${error instanceof Error ? error.message : 'Unknown error'}` },
       { status: 500 }
     )
   }
@@ -34,8 +35,9 @@ export async function GET() {
 
     return NextResponse.json(feedbacks)
   } catch (error) {
+    console.error('Error fetching feedbacks:', error)
     return NextResponse.json(
-      { error: 'Failed to fetch feedbacks' },
+      { error: `Failed to fetch feedbacks: ${error instanceof Error ? error.message : 'Unknown error'}` },
       { status: 500 }
     )
   }

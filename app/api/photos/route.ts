@@ -12,7 +12,8 @@ export async function GET() {
     });
     return NextResponse.json(photos);
   } catch (error) {
-    return NextResponse.json({ error: "Failed to fetch photos" }, { status: 500 });
+    console.error('Error fetching photos:', error);
+    return NextResponse.json({ error: `Failed to fetch photos: ${error instanceof Error ? error.message : 'Unknown error'}` }, { status: 500 });
   }
 }
 
@@ -26,6 +27,7 @@ export async function POST(request: Request) {
     });
     return NextResponse.json(photo);
   } catch (error) {
-    return NextResponse.json({ error: "Failed to create photo" }, { status: 500 });
+    console.error('Error creating photo:', error);
+    return NextResponse.json({ error: `Failed to create photo: ${error instanceof Error ? error.message : 'Unknown error'}` }, { status: 500 });
   }
 }

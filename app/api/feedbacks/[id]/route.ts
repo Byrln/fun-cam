@@ -17,8 +17,9 @@ export async function PATCH(
 
     return NextResponse.json(feedback)
   } catch (error) {
+    console.error('Error updating feedback status:', error)
     return NextResponse.json(
-      { error: 'Failed to update feedback status' },
+      { error: `Failed to update feedback status: ${error instanceof Error ? error.message : 'Unknown error'}` },
       { status: 500 }
     )
   }
