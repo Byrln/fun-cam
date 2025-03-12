@@ -1,103 +1,156 @@
-import Image from "next/image";
+"use client"
 
-export default function Home() {
+import { useState, useEffect } from "react"
+import { Camera, ImageIcon, MessageSquare, X } from "lucide-react"
+import CameraView from "@/components/camera-view"
+import PhotoGallery from "@/components/photo-gallery"
+import FeedbackForm from "@/components/feedback-form"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Button } from "@/components/ui/button"
+import { useMediaQuery } from "@/hooks/use-media-query"
+
+export default function SnapPhotoApp() {
+  const [photos, setPhotos] = useState<string[]>([])
+  const [isCapturing, setIsCapturing] = useState(true)
+  const [showPeekingCamera, setShowPeekingCamera] = useState(true)
+  const [showMessage, setShowMessage] = useState(false)
+  const [feedbackOpen, setFeedbackOpen] = useState(false)
+
+  // More precise breakpoints
+  const isSmallMobile = useMediaQuery("(max-width: 360px)")
+  // const isMobile = useMediaQuery("(min-width: 361px) and (max-width: 639px)")
+  const isTablet = useMediaQuery("(min-width: 640px) and (max-width: 1023px)")
+  const isDesktop = useMediaQuery("(min-width: 1024px)")
+  const isLandscape = useMediaQuery("(orientation: landscape)")
+
+  // Determine optimal layout
+  const useCompactLayout = isSmallMobile || (isLandscape && !isDesktop)
+  const galleryColumns = isSmallMobile ? 1 : isDesktop ? 4 : isTablet ? 3 : 2
+
+  const handleCapture = async (photoData: string) => {
+    try {
+      const response = await fetch('/api/photos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageUrl: photoData })
+      })
+      if (!response.ok) throw new Error('Failed to save photo')
+      setPhotos((prev) => [photoData, ...prev])
+      setIsCapturing(false)
+      setShowMessage(true)
+
+      // Hide message after 5 seconds
+      setTimeout(() => {
+        setShowMessage(false)
+      }, 5000)
+    } catch (error) {
+      console.error('Error saving photo:', error)
+      // You might want to show an error message to the user here
+    }
+  }
+
+  // Animation effect for peeking camera
+  useEffect(() => {
+    if (showPeekingCamera) {
+      const timer = setTimeout(() => {
+        setShowPeekingCamera(false)
+      }, 800)
+      return () => clearTimeout(timer)
+    }
+  }, [showPeekingCamera])
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    <main className="bg-gradient-to-b from-blue-50 to-blue-100 min-h-screen relative overflow-hidden">
+      {/* Peeking camera animation - hide in landscape on small devices */}
+      {showPeekingCamera && !useCompactLayout && (
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 z-10 animate-bounce">
+          <div className="bg-black rounded-b-xl p-2 sm:p-4 shadow-lg">
+            <Camera className="h-8 w-8 sm:h-12 sm:w-12 text-white" />
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
-  );
+      )}
+
+      <div
+        className={`container mx-auto px-2 sm:px-4 py-4 ${isDesktop ? "max-w-6xl" : "max-w-md"} 
+        ${useCompactLayout ? "pt-4" : "pt-12 sm:pt-16"} 
+        flex flex-col ${isLandscape && !isDesktop ? "h-screen" : "min-h-screen"}`}
+      >
+        {/* Header - more compact in landscape */}
+        <header className={`${useCompactLayout ? "py-1" : "py-2 sm:py-4"} text-center relative`}>
+          <h1 className={`${useCompactLayout ? "text-lg" : "text-xl sm:text-2xl"} font-bold text-blue-800`}>
+            Snap Photo
+          </h1>
+
+          {!useCompactLayout && <p className="text-xs sm:text-sm text-blue-600">Quick snap & collect memories</p>}
+
+          {/* Feedback button - adjust size based on screen */}
+          <Button
+            variant="outline"
+            size={useCompactLayout ? "xs" : "sm"}
+            className={`absolute right-0 top-1/2 -translate-y-1/2 bg-white border-blue-300 
+              text-blue-700 hover:bg-blue-50 text-xs sm:text-sm
+              ${useCompactLayout ? "px-2 py-1" : ""}`}
+            onClick={() => setFeedbackOpen(true)}
+          >
+            <MessageSquare className={`${useCompactLayout ? "h-3 w-3" : "h-3 w-3 sm:h-4 sm:w-4"} mr-1`} />
+            {useCompactLayout ? "Ямар нэгэн үг хэлмээр байна уу? 😉" : "Ямар нэгэн үг хэлмээр байна уу? 😉"}
+          </Button>
+        </header>
+
+        {/* Fun message after photo is taken - adjust size based on screen */}
+        {showMessage && (
+          <Alert
+            className={`bg-yellow-100 border-yellow-300 text-yellow-800 
+            ${useCompactLayout ? "mb-2 py-1" : "mb-4"} animate-bounce flex items-center justify-between gap-2`}
+          >
+            <AlertDescription className={`${useCompactLayout ? "text-xs" : "text-xs sm:text-base"} font-medium flex-1`}>
+              U're a snapped dude but don't worry it's just for fun SMILE😁
+            </AlertDescription>
+            <button
+              onClick={() => setShowMessage(false)}
+              className="flex-shrink-0 hover:bg-yellow-200 rounded-full p-1 transition-colors"
+            >
+              <X className={`${useCompactLayout ? "h-3 w-3" : "h-3 w-3 sm:h-4 sm:w-4"}`} />
+            </button>
+          </Alert>
+        )}
+
+        {/* Main content - adjust layout based on orientation and screen size */}
+        <div className={`flex-1 flex ${isLandscape && !isSmallMobile ? "flex-row" : "flex-col"} gap-2 sm:gap-4`}>
+          {isCapturing ? (
+            <div className={`relative ${isLandscape && !isSmallMobile ? "w-1/2" : "w-full"}`}>
+              {!useCompactLayout && (
+                <div className="absolute -top-6 left-1/2 -translate-x-1/2 z-10 bg-white rounded-full p-2 shadow-lg">
+                  <Camera className="h-6 w-6 sm:h-8 sm:w-8 text-blue-500" />
+                </div>
+              )}
+              <CameraView
+                onCapture={handleCapture}
+                autoCapture={true}
+                captureDelay={1000}
+                isLandscape={isLandscape}
+                useCompactLayout={useCompactLayout}
+              />
+            </div>
+          ) : (
+            <div className={`${isLandscape && !isSmallMobile ? "w-full" : "w-full"}`}>
+              {photos.length > 0 ? (
+                <PhotoGallery photos={photos} columns={galleryColumns} useCompactLayout={useCompactLayout} />
+              ) : (
+                <div className="flex-1 flex flex-col items-center justify-center text-blue-400">
+                  <ImageIcon
+                    className={`${useCompactLayout ? "h-8 w-8 mb-2" : "h-12 w-12 sm:h-16 sm:w-16 mb-4"} opacity-50`}
+                  />
+                  <p className={`${useCompactLayout ? "text-xs" : "text-sm sm:text-base"}`}>No photos captured yet.</p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Feedback form */}
+      <FeedbackForm open={feedbackOpen} onOpenChange={setFeedbackOpen} useCompactLayout={useCompactLayout} />
+    </main>
+  )
 }
